@@ -13,6 +13,7 @@ type WithdrawalRepositories interface {
 	UpdateWithdrawal(withdrawal models.Withdrawal) (models.Withdrawal, error)
 	GetUserWithdrawalByID(ID int) (models.User, error)
 	UpdateUserWithdrawal(user models.User) (models.User, error)
+	FindWithdrawalsByUserID(ID int) ([]models.Withdrawal, error)
 }
 
 func RepositoryWithdrawal(db *gorm.DB) *repository {
@@ -21,14 +22,21 @@ func RepositoryWithdrawal(db *gorm.DB) *repository {
 
 func (r *repository) FindWithdrawals() ([]models.Withdrawal, error) {
 	var withdrawals []models.Withdrawal
-	err := r.db.Preload("Bank").Find(&withdrawals).Error
+	err := r.db.Preload("Bank").Preload("User").Find(&withdrawals).Error
+
+	return withdrawals, err
+}
+
+func (r *repository) FindWithdrawalsByUserID(ID int) ([]models.Withdrawal, error) {
+	var withdrawals []models.Withdrawal
+	err := r.db.Where("user_id = ?", ID).Preload("Bank").Preload("User").Find(&withdrawals).Error
 
 	return withdrawals, err
 }
 
 func (r *repository) GetWithdrawalByID(ID int) (models.Withdrawal, error) {
 	var withdrawal models.Withdrawal
-	err := r.db.Preload("Bank").First(&withdrawal).Error
+	err := r.db.Preload("Bank").First(&withdrawal, ID).Error
 
 	return withdrawal, err
 }

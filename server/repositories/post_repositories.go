@@ -21,7 +21,7 @@ func RepositoryPost(db *gorm.DB) *repository {
 
 func (r *repository) FindPosts() ([]models.Post, error) {
 	var posts []models.Post
-	err := r.db.Preload("Photos").Preload("User").Find(&posts).Error
+	err := r.db.Limit(120).Order("id desc").Preload("Photos").Preload("User").Find(&posts).Error
 
 	return posts, err
 }
@@ -52,7 +52,7 @@ func (r *repository) GetPhotoByPostID(ID int) ([]models.Photo, error) {
 
 func (r *repository) GetUserPostByID(ID int) (models.User, error) {
 	var user models.User
-	err := r.db.Preload("Post").Preload("Followings").Preload("Followings.Post").Preload("Followers").Preload("Followers.Post").First(&user, ID).Error
+	err := r.db.Limit(120).Order("id desc").Preload("Post").Preload("Followings").Preload("Followings.Post").Preload("Followers").Preload("Followers.Post").Preload("Followings.Post.Photos").Preload("Followers.Post.Photos").First(&user, ID).Error
 
 	return user, err
 }

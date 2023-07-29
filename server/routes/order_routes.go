@@ -19,4 +19,5 @@ func OrderRoutes(e *echo.Group) {
 	e.GET("/order/:id", middlewares.Auth(h.GetOrderByID))
 	e.POST("/order", middlewares.Auth(h.CreateOrder))
 	e.PATCH("/order/:id", middlewares.Auth(h.UpdateOrderByID))
+	e.POST("/notification", h.Notification)
 }

@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
 	orderdto "waysgallery/dto/order"
@@ -12,6 +14,9 @@ import (
 	"github.com/go-playground/validator"
 	"github.com/golang-jwt/jwt"
 	"github.com/labstack/echo/v4"
+	"github.com/midtrans/midtrans-go"
+	"github.com/midtrans/midtrans-go/snap"
+	"gopkg.in/gomail.v2"
 )
 
 type handlerOrder struct {
@@ -59,7 +64,7 @@ func (h *handlerOrder) FindOrdersByVendorID(c echo.Context) error {
 
 	vendorID, _ := strconv.Atoi(c.Param("vendorID"))
 
-	orders, err := h.OrderRepositories.FindOrdersByClientID(vendorID)
+	orders, err := h.OrderRepositories.FindOrdersByVendorID(vendorID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
 	}
@@ -124,13 +129,96 @@ func (h *handlerOrder) CreateOrder(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
 	}
 
+	user, err := h.OrderRepositories.GetUserOrderByID(order.OrderByID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+	}
+
+	var s = snap.Client{}
+	s.New(os.Getenv("SERVER_KEY"), midtrans.Sandbox)
+	req := &snap.Request{
+		TransactionDetails: midtrans.TransactionDetails{
+			OrderID:  strconv.Itoa(order.ID),
+			GrossAmt: int64(order.Price),
+		},
+		CreditCard: &snap.CreditCardDetails{
+			Secure: true,
+		},
+		CustomerDetail: &midtrans.CustomerDetails{
+			FName: user.Fullname,
+			Email: user.Email,
+		},
+	}
+
+	snapResp, _ := s.CreateTransaction(req)
+
 	return c.JSON(http.StatusOK, resultdto.SuccessResult{
 		Status: "Success",
-		Data: dataOrders{
-			Orders: order,
-		},
+		Data:   snapResp,
 	})
 
+}
+
+func (h *handlerOrder) Notification(c echo.Context) error {
+	var notificationPayload map[string]interface{}
+
+	if err := c.Bind(&notificationPayload); err != nil {
+		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed!", Message: err.Error()})
+	}
+
+	transactionStatus := notificationPayload["transaction_status"].(string)
+	fraudStatus := notificationPayload["fraud_status"].(string)
+	orderID := notificationPayload["order_id"].(string)
+
+	order_id, _ := strconv.Atoi(orderID)
+
+	data, err := h.OrderRepositories.GetOrderByID(order_id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+	}
+
+	fmt.Println("Ini payload", notificationPayload)
+
+	if transactionStatus == "capture" {
+		if fraudStatus == "challenge" {
+			SendMail("Waiting Accept", data)
+			_, err := h.OrderRepositories.UpdateOrderPayment("Waiting Accept", order_id)
+			if err != nil {
+				fmt.Println("Update order failed!")
+			}
+		} else if fraudStatus == "accept" {
+			SendMail("Waiting Accept", data)
+			_, err := h.OrderRepositories.UpdateOrderPayment("Waiting Accept", order_id)
+			if err != nil {
+				fmt.Println("Update order failed!")
+			}
+		}
+	} else if transactionStatus == "settlement" {
+		SendMail("Waiting Accept", data)
+		_, err := h.OrderRepositories.UpdateOrderPayment("Waiting Accept", order_id)
+		if err != nil {
+			fmt.Println("Update order failed!")
+		}
+	} else if transactionStatus == "deny" {
+		_, err := h.OrderRepositories.UpdateOrderPayment("Cancel", order_id)
+		if err != nil {
+			fmt.Println("Update order failed!")
+		}
+	} else if transactionStatus == "cancel" || transactionStatus == "expire" {
+		_, err := h.OrderRepositories.UpdateOrderPayment("Cancel", order_id)
+		if err != nil {
+			fmt.Println("Update order failed!")
+		}
+	} else if transactionStatus == "pending" {
+		SendMail("Waiting Accept", data)
+		_, err := h.OrderRepositories.UpdateOrderPayment("Waiting Accept", order_id)
+		if err != nil {
+			fmt.Println("Update order failed!")
+		}
+
+	}
+
+	return c.JSON(http.StatusOK, resultdto.SuccessResult{Status: "Success", Data: notificationPayload})
 }
 
 func (h *handlerOrder) GetOrderByID(c echo.Context) error {
@@ -209,6 +297,61 @@ func (h *handlerOrder) UpdateOrderByID(c echo.Context) error {
 		},
 	})
 
+}
+
+func SendMail(status string, order models.Order) {
+	if status != order.Status && (status == "Waiting Accept") {
+		var CONFIG_SMTP_HOST = "smtp.gmail.com"
+		var CONFIG_SMTP_PORT = 587
+		var CONFIG_SENDER_NAME = "Landtick <sheldyrivaldi@gmail.com>"
+		var CONFIG_AUTH_EMAIL = os.Getenv("EMAIL_SYSTEM")
+		var CONFIG_AUTH_PASSWORD = os.Getenv("PASSWORD_SYSTEM")
+
+		mailer := gomail.NewMessage()
+		mailer.SetHeader("From", CONFIG_SENDER_NAME)
+		mailer.SetHeader("To", order.OrderBy.Email)
+		mailer.SetHeader("Subject", "Transaction Status")
+		mailer.SetBody("text/html", fmt.Sprintf(`<!DOCTYPE html>
+			<html lang="en">
+				<head>
+					<meta charset="UTF-8" />
+					<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+					<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+					<title>Document</title>
+					<style>
+						h1 {
+						color: brown;
+						}
+					</style>
+				</head>
+				<body>
+					<h2>Ticket Payment :</h2>
+					<ul style="list-style-type:none;">
+						<li>Title : %s</li>
+						<li>Description: %s</li>
+						<li>Total payment: Rp.%d</li>
+						<li>StatusOrder : <b>%s</b></li>
+						<li>StatusPayment : <b>%s<b></li>
+					</ul>
+				</body>
+	  		</html>`, order.Title, order.Description, order.Price, status, "Success"))
+
+		dialer := gomail.NewDialer(
+			CONFIG_SMTP_HOST,
+			CONFIG_SMTP_PORT,
+			CONFIG_AUTH_EMAIL,
+			CONFIG_AUTH_PASSWORD,
+		)
+
+		err := dialer.DialAndSend(mailer)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+
+		fmt.Println("Mail send to : " + order.OrderBy.Email)
+	} else {
+		fmt.Println("Error on sending mail!")
+	}
 }
 
 func convertResponseOrder(m models.Order) orderdto.OrderResponseDTO {

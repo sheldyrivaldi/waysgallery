@@ -46,12 +46,12 @@ func (h *handlerAuth) Login(c echo.Context) error {
 
 	user, err := h.AuthRepositories.Login(request.Email)
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: "Wrong email!"})
 	}
 
 	isValid := bcrypt.ComparePassword(request.Password, user.Password)
 	if !isValid {
-		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: "Username or Password Error!"})
+		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: "Wrong password!"})
 	}
 
 	claims := jwt.MapClaims{}
@@ -67,6 +67,7 @@ func (h *handlerAuth) Login(c echo.Context) error {
 		ID:       user.ID,
 		Fullname: user.Fullname,
 		Email:    user.Email,
+		Role:     user.Role,
 		Token:    token,
 	}
 
@@ -99,7 +100,7 @@ func (h *handlerAuth) Register(c echo.Context) error {
 	isFound, _ := h.AuthRepositories.GetUserByEmail(request.Email)
 
 	if isFound {
-		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: "Email duplicated!"})
+		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: "Email already used!"})
 	}
 
 	hashPassword, err := bcrypt.GeneratePassword(request.Password)
@@ -137,7 +138,7 @@ func (h *handlerAuth) CheckAuth(c echo.Context) error {
 	return c.JSON(http.StatusOK, resultdto.SuccessResult{
 		Status: "Success",
 		Data: dataAuth{
-			User: convertAuth(user),
+			User: user,
 		},
 	})
 }

@@ -14,6 +14,7 @@ func WithdrawalRoutes(e *echo.Group) {
 	h := handlers.HandlerWithdrawal(withdrawalRepository)
 
 	e.GET("/withdrawals", middlewares.Auth(h.FindWithdrawals))
+	e.GET("/withdrawals/:id", middlewares.Auth(h.FindWithdrawalsByUserID))
 	e.POST("/withdrawal", middlewares.Auth(h.CreateWithdrawal))
 	e.PATCH("/withdrawal/:id", middlewares.Auth(h.UpdateWithdrawal))
 }

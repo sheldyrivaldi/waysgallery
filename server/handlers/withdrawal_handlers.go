@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -39,6 +40,21 @@ func (h *handlerWithdrawal) FindWithdrawals(c echo.Context) error {
 	})
 }
 
+func (h *handlerWithdrawal) FindWithdrawalsByUserID(c echo.Context) error {
+	id, _ := strconv.Atoi(c.Param("id"))
+	withdrawals, err := h.WithdrawalRepositories.FindWithdrawalsByUserID(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, resultdto.SuccessResult{
+		Status: "Success",
+		Data: dataWithdrawals{
+			Withdrawals: withdrawals,
+		},
+	})
+}
+
 func (h *handlerWithdrawal) CreateWithdrawal(c echo.Context) error {
 	request := new(withdrawaldto.CreateWithdrawalDTO)
 
@@ -57,6 +73,7 @@ func (h *handlerWithdrawal) CreateWithdrawal(c echo.Context) error {
 	var withdrawalID int
 	for !withdrawalIsMatch {
 		withdrawalID = int(time.Now().Unix())
+		fmt.Println(withdrawalID)
 		withdrawalData, _ := h.WithdrawalRepositories.GetWithdrawalByID(withdrawalID)
 		if withdrawalData.ID == 0 {
 			withdrawalIsMatch = true
@@ -69,12 +86,23 @@ func (h *handlerWithdrawal) CreateWithdrawal(c echo.Context) error {
 
 	parseBankID, _ := strconv.Atoi(request.BankID)
 	parseAmount, _ := strconv.Atoi(request.Amount)
+	parseAccountNumber, _ := strconv.Atoi(request.AccountNumber)
+
+	user, err := h.WithdrawalRepositories.GetUserWithdrawalByID(userID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+	}
+
+	if parseAmount > user.Balance {
+		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: "Insufficient balance!"})
+	}
 
 	newWithdrawal := models.Withdrawal{
-		ID:     withdrawalID,
-		UserID: userID,
-		BankID: parseBankID,
-		Amount: parseAmount,
+		ID:            withdrawalID,
+		UserID:        userID,
+		BankID:        parseBankID,
+		AccountNumber: parseAccountNumber,
+		Amount:        parseAmount,
 	}
 
 	withdrawal, err := h.WithdrawalRepositories.CreateWithdrawal(newWithdrawal)
@@ -142,10 +170,11 @@ func (h *handlerWithdrawal) UpdateWithdrawal(c echo.Context) error {
 
 func convertResponseWithdrawal(w models.Withdrawal) withdrawaldto.WithdrawalResponseDTO {
 	return withdrawaldto.WithdrawalResponseDTO{
-		ID:     w.ID,
-		User:   w.User,
-		Bank:   w.Bank,
-		Amount: w.Amount,
-		Status: w.Status,
+		ID:            w.ID,
+		User:          w.User,
+		Bank:          w.Bank,
+		AccountNumber: w.AccountNumber,
+		Amount:        w.Amount,
+		Status:        w.Status,
 	}
 }

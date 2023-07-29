@@ -15,6 +15,7 @@ type OrderRepositories interface {
 	UpdateOrder(order models.Order) (models.Order, error)
 	UpdateBalance(user models.User) (string, error)
 	GetUserOrderByID(ID int) (models.User, error)
+	UpdateOrderPayment(status string, ID int) (models.Order, error)
 }
 
 func RepositoryOrder(db *gorm.DB) *repository {
@@ -55,6 +56,16 @@ func (r *repository) GetOrderByID(ID int) (models.Order, error) {
 }
 
 func (r *repository) UpdateOrder(order models.Order) (models.Order, error) {
+	err := r.db.Save(&order).Error
+
+	return order, err
+}
+func (r *repository) UpdateOrderPayment(status string, ID int) (models.Order, error) {
+	var order models.Order
+	r.db.Preload("OrderBy").Preload("OrderTo").First(&order, ID)
+
+	order.Status = status
+
 	err := r.db.Save(&order).Error
 
 	return order, err
