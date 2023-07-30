@@ -54,38 +54,56 @@ func (h *handlerProject) CreateProject(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
 	}
 
-	var ctx = context.Background()
-	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
-	var API_KEY = os.Getenv("API_KEY")
-	var API_SECRET = os.Getenv("API_SECRET")
-	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+	var PhotosProject []string
 
 	for i := 1; i <= 5; i++ {
 		id := strconv.Itoa(i)
-		filename := c.Get("imageFileProject" + id).(string)
+		image, err := c.FormFile("image" + id)
+		if err == nil {
+			src, err := image.Open()
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, err.Error())
+			}
+			defer src.Close()
 
-		if filename != "" {
-			resp, errUpload := cld.Upload.Upload(ctx, filename, uploader.UploadParams{Folder: "waysgallery"})
+			var ctx = context.Background()
+			var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+			var API_KEY = os.Getenv("API_KEY")
+			var API_SECRET = os.Getenv("API_SECRET")
+			cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+			resp, errUpload := cld.Upload.Upload(ctx, src, uploader.UploadParams{Folder: "waysgallery"})
 			if errUpload != nil {
 				fmt.Println(errUpload.Error())
 			}
 
+			PhotosProject = append(PhotosProject, resp.SecureURL)
+		}
+	}
+
+	if len(PhotosProject) != 0 {
+		for _, photo := range PhotosProject {
 			newPhoto := models.PhotoProject{
 				ProjectID: project.ID,
-				URL:       resp.SecureURL,
+				URL:       photo,
 			}
 
 			_, err := h.ProjectRepositories.CreatePhotoProject(newPhoto)
 			if err != nil {
-				return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
-			}
-
-			imageName := filename[8:]
-			errRemove := os.Remove(fmt.Sprintf("uploads/%s", imageName))
-			if errRemove != nil {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"message": errRemove.Error()})
+				return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: "error 1"})
 			}
 		}
+	}
+
+	order, err := h.ProjectRepositories.GetOrderProjectByID(orderID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+	}
+
+	order.Status = "Project is Complete"
+	_, errOrder := h.ProjectRepositories.UpdateOrderProject(order)
+	if errOrder != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: errOrder.Error()})
 	}
 
 	return c.JSON(http.StatusOK, resultdto.SuccessResult{
@@ -143,7 +161,7 @@ func (h *handlerProject) UpdateProject(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: "Invalid ID! Please input id as number."})
 	}
 
-	project, err := h.ProjectRepositories.GetProjectByID(id)
+	project, err := h.ProjectRepositories.GetProjectByOrderID(id)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
 	}
@@ -166,40 +184,59 @@ func (h *handlerProject) UpdateProject(c echo.Context) error {
 			return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: errDelete.Error()})
 		}
 	}
-	var ctx = context.Background()
-	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
-	var API_KEY = os.Getenv("API_KEY")
-	var API_SECRET = os.Getenv("API_SECRET")
-	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	var PhotosProject []string
 
 	for i := 1; i <= 5; i++ {
 		id := strconv.Itoa(i)
-		filename := c.Get("imageFileProject" + id).(string)
-		if filename != "" {
-			resp, errUpload := cld.Upload.Upload(ctx, filename, uploader.UploadParams{Folder: "waysgallery"})
+		image, err := c.FormFile("image" + id)
+		if err == nil {
+			src, err := image.Open()
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, err.Error())
+			}
+			defer src.Close()
+
+			var ctx = context.Background()
+			var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+			var API_KEY = os.Getenv("API_KEY")
+			var API_SECRET = os.Getenv("API_SECRET")
+			cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+			resp, errUpload := cld.Upload.Upload(ctx, src, uploader.UploadParams{Folder: "waysgallery"})
 			if errUpload != nil {
 				fmt.Println(errUpload.Error())
 			}
 
+			PhotosProject = append(PhotosProject, resp.SecureURL)
+		}
+	}
+
+	if len(PhotosProject) != 0 {
+		for _, photo := range PhotosProject {
 			newPhoto := models.PhotoProject{
-				ProjectID: data.ID,
-				URL:       resp.SecureURL,
+				ProjectID: project.ID,
+				URL:       photo,
 			}
 
 			_, err := h.ProjectRepositories.CreatePhotoProject(newPhoto)
 			if err != nil {
-				return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
-			}
-
-			imageName := filename[8:]
-			errRemove := os.Remove(fmt.Sprintf("uploads/%s", imageName))
-			if errRemove != nil {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"message": errRemove.Error()})
+				return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: "error 1"})
 			}
 		}
 	}
+	order, err := h.ProjectRepositories.GetOrderProjectByID(id)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+	}
 
-	projectData, err := h.ProjectRepositories.GetProjectByID(id)
+	order.Status = "Project is Complete"
+	_, errOrder := h.ProjectRepositories.UpdateOrderProject(order)
+	if errOrder != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: errOrder.Error()})
+	}
+
+	projectData, err := h.ProjectRepositories.GetProjectByID(data.ID)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
 	}

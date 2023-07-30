@@ -95,39 +95,49 @@ func (h *handlerPost) CreatePost(c echo.Context) error {
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: "error 2"})
 	}
-	var ctx = context.Background()
-	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
-	var API_KEY = os.Getenv("API_KEY")
-	var API_SECRET = os.Getenv("API_SECRET")
-	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+	var PhotosPost []string
 
 	for i := 1; i <= 5; i++ {
 		id := strconv.Itoa(i)
-		filename := c.Get("imageFile" + id).(string)
+		image, err := c.FormFile("image" + id)
+		if err == nil {
+			src, err := image.Open()
+			if err != nil {
+				return c.JSON(http.StatusBadRequest, err.Error())
+			}
+			defer src.Close()
 
-		if filename != "" {
-			resp, errUpload := cld.Upload.Upload(ctx, filename, uploader.UploadParams{Folder: "waysgallery"})
+			var ctx = context.Background()
+			var CLOUD_NAME = os.Getenv("CLOUD_NAME")
+			var API_KEY = os.Getenv("API_KEY")
+			var API_SECRET = os.Getenv("API_SECRET")
+			cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
+
+			resp, errUpload := cld.Upload.Upload(ctx, src, uploader.UploadParams{Folder: "waysgallery"})
 			if errUpload != nil {
 				fmt.Println(errUpload.Error())
 			}
 
+			PhotosPost = append(PhotosPost, resp.SecureURL)
+		}
+
+	}
+
+	if len(PhotosPost) != 0 {
+		for _, photo := range PhotosPost {
 			newPhoto := models.Photo{
 				PostID: post.ID,
-				URL:    resp.SecureURL,
+				URL:    photo,
 			}
 
 			_, err := h.PostRepositories.CreatePhoto(newPhoto)
 			if err != nil {
 				return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: "error 1"})
 			}
-
-			imageName := filename[8:]
-			errRemove := os.Remove(fmt.Sprintf("uploads/%s", imageName))
-			if errRemove != nil {
-				return c.JSON(http.StatusInternalServerError, map[string]string{"message": errRemove.Error()})
-			}
 		}
 	}
+
 	return c.JSON(http.StatusOK, resultdto.SuccessResult{
 		Status: "Success",
 		Data: dataPosts{

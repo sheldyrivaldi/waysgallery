@@ -74,34 +74,47 @@ func (h *handlerUser) UpdateUser(c echo.Context) error {
 
 	fullname := c.FormValue("fullname")
 	greeting := c.FormValue("greeting")
-	avatar := c.Get("avatarFile").(string)
-	banner := c.Get("bannerFile").(string)
-
-	request.Fullname = fullname
-	request.Greeting = greeting
-	request.Avatar = avatar
-	request.Banner = banner
-
-	validation := validator.New()
-
-	validationErr := validation.Struct(request)
-	if validationErr != nil {
-		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: validationErr.Error()})
-	}
 
 	var ctx = context.Background()
 	var CLOUD_NAME = os.Getenv("CLOUD_NAME")
 	var API_KEY = os.Getenv("API_KEY")
 	var API_SECRET = os.Getenv("API_SECRET")
 	cld, _ := cloudinary.NewFromParams(CLOUD_NAME, API_KEY, API_SECRET)
-
-	resp, err := cld.Upload.Upload(ctx, avatar, uploader.UploadParams{Folder: "waysgallery"})
-	if err != nil {
-		fmt.Println(err.Error())
+	avatar, err := c.FormFile("avatar")
+	if err == nil {
+		src, err := avatar.Open()
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+		defer src.Close()
+		resp, err := cld.Upload.Upload(ctx, src, uploader.UploadParams{Folder: "waysgallery"})
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		request.Avatar = resp.SecureURL
 	}
-	resp2, err := cld.Upload.Upload(ctx, banner, uploader.UploadParams{Folder: "waysgallery"})
-	if err != nil {
-		fmt.Println(err.Error())
+	banner, err := c.FormFile("banner")
+	if err == nil {
+		src, err := banner.Open()
+		if err != nil {
+			return c.JSON(http.StatusBadRequest, err.Error())
+		}
+		defer src.Close()
+		resp2, err := cld.Upload.Upload(ctx, src, uploader.UploadParams{Folder: "waysgallery"})
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+		request.Banner = resp2.SecureURL
+	}
+
+	request.Fullname = fullname
+	request.Greeting = greeting
+
+	validation := validator.New()
+
+	validationErr := validation.Struct(request)
+	if validationErr != nil {
+		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: validationErr.Error()})
 	}
 
 	user, err := h.UserRepositories.GetUserByID(user_id)
@@ -116,26 +129,15 @@ func (h *handlerUser) UpdateUser(c echo.Context) error {
 		user.Greeting = request.Greeting
 	}
 	if request.Avatar != "" {
-		user.Avatar = resp.SecureURL
+		user.Avatar = request.Avatar
 	}
 	if request.Banner != "" {
-		user.Banner = resp2.SecureURL
+		user.Banner = request.Banner
 	}
 
 	data, err := h.UserRepositories.UpdateUser(user)
 	if err != nil {
 		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
-	}
-
-	avatarName := avatar[8:]
-	errRemove := os.Remove(fmt.Sprintf("uploads/%s", avatarName))
-	if errRemove != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": errRemove.Error()})
-	}
-	bannerName := banner[8:]
-	errRemove2 := os.Remove(fmt.Sprintf("uploads/%s", bannerName))
-	if errRemove != nil {
-		return c.JSON(http.StatusInternalServerError, map[string]string{"message": errRemove2.Error()})
 	}
 
 	return c.JSON(http.StatusOK, resultdto.SuccessResult{

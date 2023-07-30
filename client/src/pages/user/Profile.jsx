@@ -1,10 +1,7 @@
 import NavbarComp from "../../components/Navbar";
-import Logo from "../../assets/logo.svg";
 import { Avatar } from "flowbite-react";
 import User from "../../assets/user.png";
 import Rectangle from "../../assets/rectangle.svg";
-import Rectangle4 from "../../assets/rectangle-4.png";
-import Rectangle8 from "../../assets/rectangle-8.png";
 
 import { API, setAuthToken } from "../../config/api";
 import { useContext, useState } from "react";
@@ -27,6 +24,10 @@ const Profile = () => {
 
   const handleNavigateEditProfile = () => {
     navigate("/profile/edit");
+  };
+
+  const handleNavigatePostDetail = (id) => {
+    navigate(`/post/${id}`);
   };
   return (
     <>
@@ -55,7 +56,7 @@ const Profile = () => {
           <div className="w-[60%] relative">
             <img className="absolute w-1/3 -top-5 -right-20" src={Rectangle} alt="rectangle" />
             <div className="w-full h-full flex justify-center items-center">
-              {user?.banner ? <img className="w-full h-96 absolute bottom-20" src={user?.banner} alt="banner" /> : <div className="w-full h-96 absolute bottom-20 bg-black bg-opacity-30 rounded-lg"></div>}
+              {user?.banner ? <img className="w-full h-96 absolute bottom-20 rounded-lg" src={user?.banner} alt="banner" /> : <div className="w-full h-96 absolute bottom-20 bg-black bg-opacity-30 rounded-lg"></div>}
             </div>
           </div>
         </div>
@@ -65,7 +66,11 @@ const Profile = () => {
           {user?.post && user?.post.length > 0 ? (
             <div className="w-full mt-5 grid grid-cols-4 gap-4">
               {user?.post.map((item) => {
-                return <img key={item.id} src={item.photos[0].url} alt="project" />;
+                return (
+                  <div onClick={() => handleNavigatePostDetail(item.id)} className="hover:scale-110 hover:transition-all">
+                    <img className="rounded" key={item.id} src={item.photos[0]?.url} alt="project" />
+                  </div>
+                );
               })}
             </div>
           ) : (

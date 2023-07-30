@@ -55,10 +55,10 @@ const Post = () => {
 
       const formData = new FormData();
       if (form.image1 != "") formData.set("image1", form.image1[0], form.image1[0].name);
-      if (form.image2 != "") formData.set("image1", form.image2[0], form.image2[0].name);
-      if (form.image3 != "") formData.set("image1", form.image3[0], form.image3[0].name);
-      if (form.image4 != "") formData.set("image1", form.image4[0], form.image4[0].name);
-      if (form.image5 != "") formData.set("image1", form.image5[0], form.image5[0].name);
+      if (form.image2 != "") formData.set("image2", form.image2[0], form.image2[0].name);
+      if (form.image3 != "") formData.set("image3", form.image3[0], form.image3[0].name);
+      if (form.image4 != "") formData.set("image4", form.image4[0], form.image4[0].name);
+      if (form.image5 != "") formData.set("image5", form.image5[0], form.image5[0].name);
       formData.set("title", form.title);
       formData.set("description", form.description);
 

@@ -22,6 +22,8 @@ const Detail = () => {
     return response.data.data.posts;
   });
 
+  console.log(posts);
+
   const { data: user, refetch } = useQuery("userCache", async () => {
     const response = await API.get(`/user/${state.user.id}`);
     return response.data.data.users;
@@ -66,20 +68,22 @@ const Detail = () => {
                 <h3 className="text-sm">{posts?.user.fullname}</h3>
               </div>
             </div>
-            <div>
-              {followings?.some((item) => item.id == postUserID) ? (
-                <button type="button" className="mr-5 font-medium text-sm py-1 px-5 cursor-pointer rounded text-black bg-[#E7E7E7] hover:bg-[#bdbbbb]" disabled>
-                  Following
+            {posts?.user.id != state.user.id ? (
+              <div>
+                {followings?.some((item) => item.id == postUserID) ? (
+                  <button type="button" className="mr-5 font-medium text-sm py-1 px-5 cursor-pointer rounded text-black bg-[#E7E7E7] hover:bg-[#bdbbbb]" disabled>
+                    Following
+                  </button>
+                ) : (
+                  <button onClick={(e) => handleFollow(e)} type="button" className="mr-5 font-medium text-sm py-1 px-5 cursor-pointer rounded text-black bg-[#E7E7E7]  hover:bg-[#bdbbbb]">
+                    Follow
+                  </button>
+                )}
+                <button onClick={handleNavigateHire} type="button" className="font-medium text-sm py-1 px-7 rounded text-white bg-[#2FC4B2] hover:bg-[#1a9b8c]">
+                  Hire
                 </button>
-              ) : (
-                <button onClick={(e) => handleFollow(e)} type="button" className="mr-5 font-medium text-sm py-1 px-5 cursor-pointer rounded text-black bg-[#E7E7E7]  hover:bg-[#bdbbbb]">
-                  Follow
-                </button>
-              )}
-              <button onClick={handleNavigateHire} type="button" className="font-medium text-sm py-1 px-7 rounded text-white bg-[#2FC4B2] hover:bg-[#1a9b8c]">
-                Hire
-              </button>
-            </div>
+              </div>
+            ) : null}
           </div>
           <div class="grid gap-4 mt-4">
             <div>

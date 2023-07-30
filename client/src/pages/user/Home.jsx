@@ -89,21 +89,20 @@ const Home = () => {
         </div>
 
         {/* Galery */}
-        <div className="w-full columns-4 gap-4 mt-5 px-14">
+        <div className="w-full cursor-pointer columns-4 gap-4 mt-5 px-14">
           {currentPost
             ?.filter((item) => {
               return search.toLowerCase() === "" ? item : item.title.toLowerCase().includes(search.toLocaleLowerCase());
             })
             .map((item) => (
-              <img
+              <div
                 onClick={() => {
                   handleNavigatePostDetail(item.id);
                 }}
-                key={item.id}
-                className="mb-4"
-                src={item.photos[0].url}
-                alt="post"
-              />
+                className="hover:scale-110 hover:transition-all"
+              >
+                <img className="rounded mb-4" key={item.id} src={item.photos[0]?.url} alt="post" />
+              </div>
             ))}
         </div>
       </div>

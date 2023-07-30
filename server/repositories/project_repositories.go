@@ -14,6 +14,8 @@ type ProjectRepositories interface {
 	CreatePhotoProject(photo models.PhotoProject) (models.PhotoProject, error)
 	GetPhotoProjectByProjectID(ID int) ([]models.PhotoProject, error)
 	DeletePhoto(photo models.PhotoProject) (string, error)
+	UpdateOrderProject(order models.Order) (models.Order, error)
+	GetOrderProjectByID(ID int) (models.Order, error)
 }
 
 func RepositoryProject(db *gorm.DB) *repository {
@@ -61,4 +63,17 @@ func (r *repository) DeletePhoto(photo models.PhotoProject) (string, error) {
 	err := r.db.Delete(&photo).Error
 
 	return "Delete Success", err
+}
+
+func (r *repository) UpdateOrderProject(order models.Order) (models.Order, error) {
+	err := r.db.Save(&order).Error
+
+	return order, err
+}
+
+func (r *repository) GetOrderProjectByID(ID int) (models.Order, error) {
+	var order models.Order
+	err := r.db.Preload("OrderBy").Preload("OrderTo").First(&order, ID).Error
+
+	return order, err
 }

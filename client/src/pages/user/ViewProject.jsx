@@ -3,12 +3,13 @@ import PhotoPopUp from "../../components/PhotoPopUp";
 
 import { Modal } from "flowbite-react";
 import { useQuery, useMutation } from "react-query";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { API, setAuthToken } from "../../config/api";
 
 const ViewProject = () => {
   const param = useParams();
+  const navigate = useNavigate();
   const [isSubmit, setIsSubmit] = useState(false);
   const [status, setStatus] = useState("");
   const [openModal, setOpenModal] = useState();
@@ -54,6 +55,7 @@ const ViewProject = () => {
         );
 
         setIsSubmit(true);
+        navigate("/order");
       }
     } catch (err) {
       console.log("Accept project failed!", err);

@@ -90,7 +90,9 @@ const MyOrder = () => {
       case "Success":
         return (
           <Table.Cell className="flex justify-center">
-            <img src={Accept} alt="accept" />
+            <button onClick={() => handleNavigateViewProject(id)} type="button" className="text-sm px-3 py-1 font-bold rounded text-white bg-[#0ACF83] hover:bg-[#09bd78]">
+              View Project
+            </button>
           </Table.Cell>
         );
       case "Cancel":
