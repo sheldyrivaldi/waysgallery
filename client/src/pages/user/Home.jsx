@@ -99,7 +99,7 @@ const Home = () => {
                 onClick={() => {
                   handleNavigatePostDetail(item.id);
                 }}
-                className="hover:scale-110 hover:transition-all"
+                className="hover:scale-110 hover:transition-all hover:duration-500 transition-all duration:1000"
               >
                 <img className="rounded mb-4" key={item.id} src={item.photos[0]?.url} alt="post" />
               </div>
