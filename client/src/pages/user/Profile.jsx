@@ -64,11 +64,11 @@ const Profile = () => {
           <h3 className="font-bold text-lg">My Works</h3>
 
           {user?.post && user?.post.length > 0 ? (
-            <div className="w-full mt-5 grid grid-cols-4 gap-4">
+            <div className="w-full cursor-pointer columns-4 gap-4 mt-5">
               {user?.post.map((item) => {
                 return (
                   <div onClick={() => handleNavigatePostDetail(item.id)} className="hover:scale-110 hover:transition-all">
-                    <img className="rounded" key={item.id} src={item.photos[0]?.url} alt="project" />
+                    <img className="rounded mb-4" key={item.id} src={item.photos[0]?.url} alt="project" />
                   </div>
                 );
               })}

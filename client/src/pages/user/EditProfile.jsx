@@ -115,15 +115,8 @@ const EditProfile = () => {
             <input onChange={handleChangeImage} type="file" className="hidden" id="avatar" name="avatar" />
           </label>
           <div className="w-[70%] my-8">
-            <input onChange={handleChangeForm} type="text" name="greeting" className="text-lg py-2 px-3 w-full rounded bg-[#E7E7E7] border-2 border-[#2FC4B2]" placeholder="Greeting" value={user?.greeting ? user?.greeting : form.greeting} />
-            <input
-              onChange={handleChangeForm}
-              type="text"
-              name="fullname"
-              className="text-lg py-2 px-3 mt-4 w-full rounded bg-[#E7E7E7] border-2 border-[#2FC4B2]"
-              placeholder="Fullname"
-              value={user?.fullname ? user?.fullname : form.fullname}
-            />
+            <input onChange={handleChangeForm} type="text" name="greeting" className="text-lg py-2 px-3 w-full rounded bg-[#E7E7E7] border-2 border-[#2FC4B2]" placeholder="Greeting" value={form.greeting} />
+            <input onChange={handleChangeForm} type="text" name="fullname" className="text-lg py-2 px-3 mt-4 w-full rounded bg-[#E7E7E7] border-2 border-[#2FC4B2]" placeholder="Fullname" value={form.fullname} />
           </div>
           <button type="submit" className="px-8 py-2 font-bold text-sm bg-[#2FC4B2] hover:bg-[#1a9b8c] text-white rounded">
             Save
