@@ -52,8 +52,8 @@ const MyOffer = () => {
         },
       };
       const response = await API.patch(`/order/${id}`, { status: "On Progress" }, config);
-
-      setIsSubmit(true);
+      //waysgallery-one.vercel.app/profile
+      https: setIsSubmit(true);
     } catch (err) {
       console.log("Accept order failed!", err);
     }
@@ -200,7 +200,7 @@ const MyOffer = () => {
           <Table>
             <Table.Head>
               <TableHeadCell className="bg-[#E5E5E5]">No</TableHeadCell>
-              <TableHeadCell className="No Offerbg-[#E5E5E5]">Client</TableHeadCell>
+              <TableHeadCell className="bg-[#E5E5E5]">Client</TableHeadCell>
               <TableHeadCell className="bg-[#E5E5E5]">Order</TableHeadCell>
               <TableHeadCell className="bg-[#E5E5E5]">Start Project</TableHeadCell>
               <TableHeadCell className="bg-[#E5E5E5]">End Project</TableHeadCell>
