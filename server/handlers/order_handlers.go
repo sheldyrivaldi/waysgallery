@@ -16,6 +16,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/midtrans/midtrans-go"
 	"github.com/midtrans/midtrans-go/snap"
+	"github.com/yudapc/go-rupiah"
 	"gopkg.in/gomail.v2"
 )
 
@@ -300,12 +301,15 @@ func (h *handlerOrder) UpdateOrderByID(c echo.Context) error {
 }
 
 func SendMail(status string, order models.Order) {
-	if status != order.Status && (status == "Waiting Accept") {
+	if status == "Waiting Accept" {
 		var CONFIG_SMTP_HOST = "smtp.gmail.com"
 		var CONFIG_SMTP_PORT = 587
 		var CONFIG_SENDER_NAME = "Ways Gallery <sheldyrivaldi@gmail.com>"
 		var CONFIG_AUTH_EMAIL = os.Getenv("EMAIL_SYSTEM")
 		var CONFIG_AUTH_PASSWORD = os.Getenv("PASSWORD_SYSTEM")
+
+		var TotalPayment = float64(order.Price)
+		var TotalPaymentPupiah = rupiah.FormatRupiah(TotalPayment)
 
 		mailer := gomail.NewMessage()
 		mailer.SetHeader("From", CONFIG_SENDER_NAME)
@@ -329,12 +333,12 @@ func SendMail(status string, order models.Order) {
 					<ul style="list-style-type:none;">
 						<li>Title : %s</li>
 						<li>Description: %s</li>
-						<li>Total payment: Rp.%d</li>
-						<li>StatusOrder : <b>%s</b></li>
-						<li>StatusPayment : <b>%s<b></li>
+						<li>StatusOrder : %s</li>
+						<li>StatusPayment : %s</li>
+						<li>Total payment: <b>%s</b></li>
 					</ul>
 				</body>
-	  		</html>`, order.Title, order.Description, order.Price, status, "Success"))
+	  		</html>`, order.Title, order.Description, status, "Success", TotalPaymentPupiah))
 
 		dialer := gomail.NewDialer(
 			CONFIG_SMTP_HOST,

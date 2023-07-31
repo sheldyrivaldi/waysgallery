@@ -36,7 +36,7 @@ func (r *repository) FindWithdrawalsByUserID(ID int) ([]models.Withdrawal, error
 
 func (r *repository) GetWithdrawalByID(ID int) (models.Withdrawal, error) {
 	var withdrawal models.Withdrawal
-	err := r.db.Preload("Bank").First(&withdrawal, ID).Error
+	err := r.db.Preload("Bank").Preload("User").First(&withdrawal, ID).Error
 
 	return withdrawal, err
 }

@@ -22,8 +22,6 @@ func DatabaseInit() {
 	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s", DB_HOST, DB_USER, DB_PASSWORD, DB_NAME, DB_PORT)
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 
-	// dsn := "root:@tcp(127.0.0.1:3306)/waysgallery?charset=utf8mb4&parseTime=True&loc=Local"
-	// DB, err = gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic(err)
 	}
