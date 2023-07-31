@@ -12,6 +12,8 @@ type UserRepositories interface {
 	UpdateUser(user models.User) (models.User, error)
 	FollowingUser(currentUser, followingUser models.User) (models.User, error)
 	FollowedByUser(currentUser, followingUser models.User) (models.User, error)
+	UnfollowUser(currentUser, followingUser models.User) (models.User, error)
+	UnfollowedByUser(currentUser, followingUser models.User) (models.User, error)
 }
 
 func RepositoryUser(db *gorm.DB) *repository {
@@ -44,6 +46,18 @@ func (r *repository) FollowingUser(currentUser, followingUser models.User) (mode
 
 func (r *repository) FollowedByUser(currentUser, followingUser models.User) (models.User, error) {
 	err := r.db.Model(&followingUser).Association("Followers").Append(&currentUser)
+
+	return followingUser, err
+}
+
+func (r *repository) UnfollowUser(currentUser, followingUser models.User) (models.User, error) {
+	err := r.db.Model(&currentUser).Association("Followings").Delete(&followingUser)
+
+	return followingUser, err
+}
+
+func (r *repository) UnfollowedByUser(currentUser, followingUser models.User) (models.User, error) {
+	err := r.db.Model(&followingUser).Association("Followers").Delete(&currentUser)
 
 	return followingUser, err
 }

@@ -19,5 +19,7 @@
 }
 
 .modal-dropdown.activate {
+  position: fixed;
+  z-index: 30;
   height: 100%;
 }

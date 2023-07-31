@@ -48,12 +48,29 @@ const Detail = () => {
     }
   };
 
+  const handleUnfollow = async (e) => {
+    e.preventDefault();
+    try {
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      };
+
+      const response = await API.post("/user/unfollow", { following_id: String(postUserID) }, config);
+      setIsSubmit(true);
+    } catch (err) {
+      console.log("Unfollow is failed!", err);
+    }
+  };
+
   const handleNavigateHire = () => {
     navigate(`/post/${param.id}/hire`);
   };
 
   useEffect(() => {
     refetch();
+    setIsSubmit(false);
   }, [isSubmit]);
   return (
     <>
@@ -71,8 +88,8 @@ const Detail = () => {
             {posts?.user.id != state.user.id ? (
               <div>
                 {followings?.some((item) => item.id == postUserID) ? (
-                  <button type="button" className="mr-5 font-medium text-sm py-1 px-5 cursor-pointer rounded text-black bg-[#E7E7E7] hover:bg-[#bdbbbb]" disabled>
-                    Following
+                  <button onClick={(e) => handleUnfollow(e)} type="button" className="mr-5 font-medium text-sm py-1 px-5 cursor-pointer rounded text-black bg-[#E7E7E7] hover:bg-[#bdbbbb]">
+                    Unfollow
                   </button>
                 ) : (
                   <button onClick={(e) => handleFollow(e)} type="button" className="mr-5 font-medium text-sm py-1 px-5 cursor-pointer rounded text-black bg-[#E7E7E7]  hover:bg-[#bdbbbb]">

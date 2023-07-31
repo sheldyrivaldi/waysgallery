@@ -15,6 +15,7 @@ func UserRoutes(e *echo.Group) {
 
 	e.GET("/users", middlewares.Auth(h.FindUsers))
 	e.POST("/user", middlewares.Auth(h.FollowingUser))
+	e.POST("/user/unfollow", middlewares.Auth(h.UnfollowUser))
 	e.GET("/user/:id", middlewares.Auth(h.GetUserByID))
 	e.PATCH("/user/:id", middlewares.Auth(h.UpdateUser))
 }

@@ -33,7 +33,7 @@ const Dropdown = ({ dropDropdown }) => {
   return (
     <>
       <div onClick={handleDropDropdown} className="w-screen h-screen inset-0 absolute m-0 p-0 flex justify-center bg-transparent"></div>
-      <div className="mt-20 w-36 h-58 pt-1 pl-2 flex flex-col absolute right-20 z-30 rounded bg-white shadow-[rgba(50,50,93,0.25)_0px_6px_12px_-2px,_rgba(0,0,0,0.3)_0px_3px_7px_-3px]">
+      <div className="mt-20 w-36 h-58 pt-1 pl-2 flex flex-col absolute right-20 z-50 rounded bg-white shadow-[rgba(50,50,93,0.25)_0px_6px_12px_-2px,_rgba(0,0,0,0.3)_0px_3px_7px_-3px]">
         <div class="segitiga-dropdown absolute -top-3 right-2"></div>
         <div onClick={handleNavigateProfile} className="flex items-center py-3 cursor-pointer">
           <img className="w-8" src={User} alt="user-icon" />

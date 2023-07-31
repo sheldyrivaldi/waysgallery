@@ -181,24 +181,24 @@ func (h *handlerOrder) Notification(c echo.Context) error {
 
 	if transactionStatus == "capture" {
 		if fraudStatus == "challenge" {
-			SendMail("Waiting Accept", data)
 			_, err := h.OrderRepositories.UpdateOrderPayment("Waiting Accept", order_id)
 			if err != nil {
 				fmt.Println("Update order failed!")
 			}
+			SendMail("Waiting Accept", data)
 		} else if fraudStatus == "accept" {
-			SendMail("Waiting Accept", data)
 			_, err := h.OrderRepositories.UpdateOrderPayment("Waiting Accept", order_id)
 			if err != nil {
 				fmt.Println("Update order failed!")
 			}
+			SendMail("Waiting Accept", data)
 		}
 	} else if transactionStatus == "settlement" {
-		SendMail("Waiting Accept", data)
 		_, err := h.OrderRepositories.UpdateOrderPayment("Waiting Accept", order_id)
 		if err != nil {
 			fmt.Println("Update order failed!")
 		}
+		SendMail("Waiting Accept", data)
 	} else if transactionStatus == "deny" {
 		_, err := h.OrderRepositories.UpdateOrderPayment("Cancel", order_id)
 		if err != nil {
@@ -303,7 +303,7 @@ func SendMail(status string, order models.Order) {
 	if status != order.Status && (status == "Waiting Accept") {
 		var CONFIG_SMTP_HOST = "smtp.gmail.com"
 		var CONFIG_SMTP_PORT = 587
-		var CONFIG_SENDER_NAME = "Landtick <sheldyrivaldi@gmail.com>"
+		var CONFIG_SENDER_NAME = "Ways Gallery <sheldyrivaldi@gmail.com>"
 		var CONFIG_AUTH_EMAIL = os.Getenv("EMAIL_SYSTEM")
 		var CONFIG_AUTH_PASSWORD = os.Getenv("PASSWORD_SYSTEM")
 

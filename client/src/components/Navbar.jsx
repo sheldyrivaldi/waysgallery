@@ -42,7 +42,7 @@ const NavbarComp = () => {
   };
   return (
     <>
-      <div className="flex justify-between items-center py-3 px-20 border-b fixed w-full z-[30] top-0 left-0 bg-white border-[#E1E1E1]">
+      <div className="flex justify-between items-center py-3 px-20 border-b fixed w-full z-30 top-0 left-0 bg-white border-[#E1E1E1]">
         <div onClick={handleClickNavigateHome} className="w-20 cursor-pointer">
           <img src={Logo} alt="logo" />
         </div>
@@ -55,6 +55,7 @@ const NavbarComp = () => {
           </div>
         </div>
       </div>
+
       {showDropdown ? (
         <div className="modal-dropdown activate">
           <Dropdown dropDropdown={handleDropDropdown} />

@@ -196,6 +196,54 @@ func (h *handlerUser) FollowingUser(c echo.Context) error {
 
 }
 
+func (h *handlerUser) UnfollowUser(c echo.Context) error {
+	claims := c.Get("userLogin")
+	id := claims.(jwt.MapClaims)["id"].(float64)
+	currentUserID := int(id)
+
+	request := new(userdto.FollowingUser)
+
+	errBind := c.Bind(&request)
+	if errBind != nil {
+		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: errBind.Error()})
+	}
+
+	validation := validator.New()
+
+	validationErr := validation.Struct(request)
+	if validationErr != nil {
+		return c.JSON(http.StatusBadRequest, resultdto.ErrorResult{Status: "Failed", Message: validationErr.Error()})
+	}
+
+	followingUserID, _ := strconv.Atoi(request.FollowingID)
+
+	currentUser, err := h.UserRepositories.GetUserByID(currentUserID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+	}
+
+	followingUser, err := h.UserRepositories.GetUserByID(followingUserID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: err.Error()})
+	}
+
+	_, errFollowing := h.UserRepositories.UnfollowUser(currentUser, followingUser)
+	if errFollowing != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: errFollowing.Error()})
+	}
+
+	_, errFollower := h.UserRepositories.UnfollowedByUser(currentUser, followingUser)
+	if errFollower != nil {
+		return c.JSON(http.StatusInternalServerError, resultdto.ErrorResult{Status: "Failed", Message: errFollower.Error()})
+	}
+
+	return c.JSON(http.StatusOK, resultdto.SuccessResult{
+		Status: "Success",
+		Data:   "Success unfollowing user!",
+	})
+
+}
+
 func convertResponseUser(u models.User) userdto.UserResponseDTO {
 	return userdto.UserResponseDTO{
 		ID:         u.ID,
