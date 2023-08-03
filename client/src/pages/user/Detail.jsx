@@ -64,6 +64,14 @@ const Detail = () => {
     }
   };
 
+  const handleNavigateProfileUser = () => {
+    try {
+      navigate(`/profile/${postUserID}`);
+    } catch (err) {
+      console.log("Failed navgiate to profile user", err);
+    }
+  };
+
   const handleNavigateHire = () => {
     navigate(`/post/${param.id}/hire`);
   };
@@ -78,11 +86,11 @@ const Detail = () => {
       <div className="py-24">
         <Card className="w-1/2 mx-auto">
           <div className="w-full flex justify-between items-center">
-            <div className="flex items-center justify-start">
+            <div className="flex items-center justify-start ">
               {posts?.user.avatar ? <Avatar alt="profile" img={posts?.user.avatar} rounded /> : <Avatar alt="profile" img={User} rounded />}
-              <div className="flex flex-col justify-center items-start ml-4">
-                <h2 className="font-bold text-md">{posts?.title}</h2>
-                <h3 className="text-sm">{posts?.user.fullname}</h3>
+              <div onClick={handleNavigateProfileUser} className="flex cursor-pointer hover:scale-[101%] flex-col justify-center items-start ml-4">
+                <h2 className="font-bold cursor-pointer text-md">{posts?.title}</h2>
+                <h3 className="text-sm cursor-pointer">{posts?.user.fullname}</h3>
               </div>
             </div>
             {posts?.user.id != state.user.id ? (
